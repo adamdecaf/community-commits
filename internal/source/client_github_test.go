@@ -15,9 +15,21 @@ func TestGithub_GetForks(t *testing.T) {
 	forks, err := gh.GetForks(ctx, "moov-io", "ach")
 	require.NoError(t, err)
 	require.Greater(t, len(forks), 1)
+}
 
-	for i := range forks {
-		t.Logf("%#v", forks[i])
+func TestGithub_ListBranches(t *testing.T) {
+	gh := testGithubClient(t)
+
+	ctx := context.Background()
+	branches, err := gh.ListBranches(ctx, Repository{
+		Owner: "moov-io",
+		Name:  "ach",
+	})
+	require.NoError(t, err)
+	require.Greater(t, len(branches), 1)
+
+	for i := range branches {
+		t.Logf("%#v", branches[i])
 	}
 }
 

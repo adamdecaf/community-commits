@@ -9,7 +9,10 @@ type Repository struct {
 }
 
 type Branch struct {
-	Name       string
+	Name string
+
+	LastCommitTimestamp time.Time
+
 	Repository Repository
 }
 
