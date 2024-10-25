@@ -1,4 +1,4 @@
-package config
+package tracker
 
 import (
 	"path/filepath"
