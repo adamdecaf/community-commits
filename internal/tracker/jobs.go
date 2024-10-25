@@ -70,8 +70,6 @@ func (w *Worker) handleJobs() handler.Handler {
 			return err
 		}
 
-		fmt.Printf("%#v\n", job)
-
 		jobType, ok := job.Payload["type"].(string)
 		if !ok {
 			return fmt.Errorf("job=%d unexpected type: %T", job.ID, job.Payload["type"])
