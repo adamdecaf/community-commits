@@ -1,6 +1,7 @@
 package tracker
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -49,4 +50,20 @@ func (w *Worker) Sync() error {
 	return nil
 }
 
-// TODO(adam): add .Start()
+func (w *Worker) Start(ctx context.Context) error {
+	err := w.startProcessingJobs(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (w *Worker) Stop() error {
+	err := w.stopProcessingJobs()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

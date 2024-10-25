@@ -6,3 +6,4 @@ Tracking:
   Queue:
     QueueName: "oss_repos"
     ConnectionString: "postgres://community_commits:secret@127.0.0.1:5432/community_commits?sslmode=disable"
+    JobInterval: "1m"

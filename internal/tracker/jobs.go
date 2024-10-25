@@ -1,9 +1,11 @@
 package tracker
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/acaloiaro/neoq"
 	"github.com/acaloiaro/neoq/backends/postgres"
@@ -14,9 +16,13 @@ import (
 func (w *Worker) setupNeoq() error {
 	ctx := context.Background()
 
+	queueConf := w.conf.Tracking.Queue
+	checkInterval := cmp.Or(queueConf.JobInterval, time.Second)
+
 	nq, err := neoq.New(ctx,
-		postgres.WithConnectionString(w.conf.Tracking.Queue.ConnectionString),
+		neoq.WithJobCheckInterval(checkInterval),
 		neoq.WithBackend(postgres.Backend),
+		postgres.WithConnectionString(queueConf.ConnectionString),
 	)
 	if err != nil {
 		return fmt.Errorf("neoq postgres connect: %w", err)
@@ -27,17 +33,59 @@ func (w *Worker) setupNeoq() error {
 	return nil
 }
 
-func (w *Worker) startProcessingJobs() error {
+func (w *Worker) startProcessingJobs(ctx context.Context) error {
 	if w == nil {
 		return nil
 	}
 
-	ctx := context.Background()
-	err := w.queue.Start(ctx, w.handleJobs())
+	jobInterval := w.conf.Tracking.Queue.JobInterval
+	if jobInterval <= time.Second {
+		jobInterval = time.Hour
+	}
+
+	schedule := formatCrontabSchedule(jobInterval)
+	err := w.queue.StartCron(ctx, schedule, w.handleJobs())
 	if err != nil {
 		return fmt.Errorf("starting neoq processing: %w", err)
 	}
+
 	return nil
+}
+
+func formatCrontabSchedule(interval time.Duration) string {
+	s, m, h, d := "0", "0", "*", "*"
+
+	days := int(interval.Truncate(24*time.Hour).Hours()) / 24
+	if days >= 1 {
+		days += 1 // account for Truncate
+
+		d = fmt.Sprintf("1/%d", days)
+	}
+
+	hours := int(interval.Truncate(time.Hour).Hours()) % 24
+	if hours >= 1 {
+		if days >= 1 {
+			h = fmt.Sprintf("%d", hours)
+		} else {
+			h = fmt.Sprintf("1/%d", hours)
+		}
+	}
+
+	mins := int(interval.Truncate(time.Minute).Minutes()) % 60
+	if mins >= 1 {
+		if hours > 1 {
+			m = fmt.Sprintf("%d", mins)
+		} else {
+			m = fmt.Sprintf("1/%d", mins)
+		}
+	}
+
+	secs := int(interval.Seconds()) % 60
+	if secs >= 1 {
+		s = fmt.Sprintf("1/%d", secs)
+	}
+
+	return fmt.Sprintf("%s %s %s %s * *", s, m, h, d)
 }
 
 func (w *Worker) stopProcessingJobs() error {
@@ -52,7 +100,7 @@ func (w *Worker) stopProcessingJobs() error {
 func (w *Worker) handleJobs() handler.Handler {
 	queueName := w.conf.Tracking.Queue.QueueName
 
-	return handler.New(queueName, func(ctx context.Context) error {
+	return handler.NewPeriodic(func(ctx context.Context) error {
 		job, err := jobs.FromContext(ctx)
 		if err != nil {
 			return err
@@ -61,7 +109,10 @@ func (w *Worker) handleJobs() handler.Handler {
 		w.logger.Info(fmt.Sprintf("job: %#v", job))
 
 		return nil
-	})
+	},
+		handler.Concurrency(1),
+		handler.Queue(queueName),
+	)
 }
 
 func (w *Worker) enqueueRepository(r Repository) error {
@@ -78,6 +129,10 @@ func (w *Worker) enqueueRepository(r Repository) error {
 		Payload: payload,
 	})
 	if err != nil {
+		// Skip if we've already enqueued this repository
+		if errors.Is(err, postgres.ErrDuplicateJob) {
+			return nil
+		}
 		return fmt.Errorf("enqueue of %s failed: %w", r.ID(), err)
 	}
 

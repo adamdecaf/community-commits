@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/adamdecaf/community-commits/internal/source"
 
@@ -68,6 +69,8 @@ func (r Repository) ID() string {
 type QueueConfig struct {
 	QueueName        string
 	ConnectionString string
+
+	JobInterval time.Duration
 }
 
 func ReadSourcesFromEnv(existing *source.Config) {
