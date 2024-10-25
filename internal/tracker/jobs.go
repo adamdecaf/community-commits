@@ -5,12 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/acaloiaro/neoq"
 	"github.com/acaloiaro/neoq/backends/postgres"
 	"github.com/acaloiaro/neoq/handler"
 	"github.com/acaloiaro/neoq/jobs"
+	"github.com/acaloiaro/neoq/logging"
 )
 
 func (w *Worker) setupNeoq() error {
@@ -22,11 +25,14 @@ func (w *Worker) setupNeoq() error {
 	nq, err := neoq.New(ctx,
 		neoq.WithJobCheckInterval(checkInterval),
 		neoq.WithBackend(postgres.Backend),
+		neoq.WithLogLevel(logging.LogLevelDebug),
 		postgres.WithConnectionString(queueConf.ConnectionString),
 	)
 	if err != nil {
 		return fmt.Errorf("neoq postgres connect: %w", err)
 	}
+
+	nq.SetLogger(w.logger)
 
 	w.queue = nq
 
@@ -106,7 +112,21 @@ func (w *Worker) handleJobs() handler.Handler {
 			return err
 		}
 
-		w.logger.Info(fmt.Sprintf("job: %#v", job))
+		fmt.Printf("%#v\n", job)
+
+		jobType, ok := job.Payload["type"].(string)
+		if !ok {
+			return fmt.Errorf("job=%d unexpected type: %T", job.ID, job.Payload["type"])
+		}
+
+		w.logger.Info(fmt.Sprintf("handling job %d", job.ID),
+			slog.String("job_type", jobType),
+		)
+
+		switch strings.ToLower(jobType) {
+		case "repository":
+			return w.handleRepositoryJob(job)
+		}
 
 		return nil
 	},
@@ -120,13 +140,15 @@ func (w *Worker) enqueueRepository(r Repository) error {
 		return errors.New("missing queue")
 	}
 
-	payload := make(map[string]interface{})
-	payload["repository"] = r
-
 	ctx := context.Background()
 	jobID, err := w.queue.Enqueue(ctx, &jobs.Job{
-		Queue:   w.conf.Tracking.Queue.QueueName,
-		Payload: payload,
+		Queue: w.conf.Tracking.Queue.QueueName,
+		Payload: map[string]interface{}{
+			"type":   "repository",
+			"source": r.Source,
+			"owner":  r.Owner,
+			"name":   r.Name,
+		},
 	})
 	if err != nil {
 		// Skip if we've already enqueued this repository
@@ -137,8 +159,8 @@ func (w *Worker) enqueueRepository(r Repository) error {
 	}
 
 	w.logger.Info("enqueued repository",
-		"job_id", jobID,
-		"repository", r.ID(),
+		slog.String("job_id", jobID),
+		slog.String("repository", r.ID()),
 	)
 
 	return nil

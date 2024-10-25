@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -46,7 +47,7 @@ func main() {
 	defer func() {
 		err := env.TrackingWorker.Stop()
 		if err != nil {
-			env.Logger.Info("shutting down worker", "error", err.Error())
+			env.Logger.Info("shutting down worker", slog.String("error", err.Error()))
 		}
 	}()
 
