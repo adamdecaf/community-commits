@@ -1,0 +1,9 @@
+Tracking:
+  Repositories:
+    - source: "github"
+      owner: "moov-io"
+      name: "ach"
+
+Sources:
+  github:
+    authToken: "github-api-key"
