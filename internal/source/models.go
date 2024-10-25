@@ -19,7 +19,7 @@ type Branch struct {
 type Commit struct {
 	Hash       string
 	Repository Repository
-	Branch     Repository
+	Branch     Branch
 
 	Author  string
 	Date    time.Time

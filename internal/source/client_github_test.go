@@ -33,6 +33,29 @@ func TestGithub_ListBranches(t *testing.T) {
 	}
 }
 
+func TestGithub_ListCommits(t *testing.T) {
+	gh := testGithubClient(t)
+
+	ctx := context.Background()
+
+	repo := Repository{
+		Owner: "moov-io",
+		Name:  "ach",
+	}
+	branch := Branch{
+		Name: "master",
+	}
+
+	commits, err := gh.ListCommits(ctx, repo, branch)
+	require.NoError(t, err)
+	require.Greater(t, len(commits), 1)
+
+	for i := range commits {
+		t.Logf("%#v", commits[i])
+	}
+
+}
+
 func testGithubClient(t *testing.T) *githubSource {
 	t.Helper()
 

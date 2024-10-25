@@ -22,7 +22,10 @@ func newGithubClient(config GithubConfig) (Client, error) {
 }
 
 func (g *githubSource) GetRepository(ctx context.Context, owner, name string) (Repository, error) {
-	return Repository{}, nil
+	return Repository{
+		Owner: owner,
+		Name:  name,
+	}, nil
 }
 
 func (g *githubSource) GetForks(ctx context.Context, owner, name string) ([]Repository, error) {
@@ -98,5 +101,44 @@ func (g *githubSource) ListBranches(ctx context.Context, repo Repository) ([]Bra
 }
 
 func (g *githubSource) ListCommits(ctx context.Context, repo Repository, branch Branch) ([]Commit, error) {
-	return nil, nil
+	opts := &github.CommitsListOptions{
+		SHA: branch.Name,
+		// Since time.Time // TODO(adam):
+		ListOptions: github.ListOptions{ // TODO(adam): paginate
+			Page:    0,
+			PerPage: 100,
+		},
+	}
+	commits, resp, err := g.client.Repositories.ListCommits(ctx, repo.Owner, repo.Name, opts)
+	if err != nil {
+		return nil, fmt.Errorf("listing commits: %w", err)
+	}
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
+	var out []Commit
+	for _, commit := range commits {
+		c := Commit{
+			Hash:       commit.GetSHA(),
+			Repository: repo,
+			Branch:     branch,
+			Author:     commit.GetCommit().GetAuthor().GetName(),
+			Message:    commit.GetCommit().GetMessage(),
+		}
+
+		committerDate := commit.GetCommit().GetCommitter().Date.GetTime()
+		if committerDate != nil {
+			c.Date = *committerDate
+		}
+		if c.Date.IsZero() {
+			authorDate := commit.GetCommit().GetAuthor().Date.GetTime()
+			if authorDate != nil {
+				c.Date = *authorDate
+			}
+		}
+
+		out = append(out, c)
+	}
+	return out, nil
 }
