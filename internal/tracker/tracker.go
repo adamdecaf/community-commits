@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/acaloiaro/neoq"
 )
@@ -40,9 +41,12 @@ func NewWorker(logger *slog.Logger, conf Config) (*Worker, error) {
 }
 
 func (w *Worker) Sync() error {
+	// We want to scan repositories on startup
+	nextScan := time.Now().In(time.UTC)
+
 	// For each repository grab the forks and insert each as an item to crawl
 	for _, repo := range w.conf.Tracking.Repositories {
-		err := w.enqueueRepository(repo)
+		err := w.enqueueRepository(repo, nextScan)
 		if err != nil {
 			return fmt.Errorf("enqueue %v failed: %w", repo.ID(), err)
 		}

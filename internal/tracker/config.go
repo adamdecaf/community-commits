@@ -70,7 +70,8 @@ type QueueConfig struct {
 	QueueName        string
 	ConnectionString string
 
-	JobInterval time.Duration
+	RescanEvery    time.Duration
+	WorkerInterval time.Duration
 }
 
 func ReadSourcesFromEnv(existing *source.Config) {
