@@ -8,6 +8,8 @@ import (
 )
 
 func TestConfig(t *testing.T) {
+	t.Setenv("COMMUNITY_COMMITS_GITHUB_API_KEY", "")
+
 	conf, err := Load(filepath.Join("testdata", "valid.yaml"))
 	require.NoError(t, err)
 	require.NotNil(t, conf)

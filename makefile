@@ -8,6 +8,10 @@ else
 	COVER_THRESHOLD=0.0 ./lint-project.sh
 endif
 
+.PHONY: db
+db:
+	psql "postgres://community_commits:secret@127.0.0.1:5432/community_commits"
+
 .PHONY: clean
 clean:
 	@rm -rf ./bin/ ./tmp/ coverage.txt misspell* staticcheck lint-project.sh

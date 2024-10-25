@@ -51,12 +51,23 @@ type Config struct {
 
 type TrackingConfig struct {
 	Repositories []Repository
+
+	Queue QueueConfig
 }
 
 type Repository struct {
 	Source string
 	Owner  string
 	Name   string
+}
+
+func (r Repository) ID() string {
+	return fmt.Sprintf("%s[%s/%s]", r.Source, r.Owner, r.Name)
+}
+
+type QueueConfig struct {
+	QueueName        string
+	ConnectionString string
 }
 
 func ReadSourcesFromEnv(existing *source.Config) {

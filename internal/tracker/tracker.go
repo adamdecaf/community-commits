@@ -3,10 +3,8 @@ package tracker
 import (
 	"fmt"
 	"log/slog"
-	"strings"
-	"sync"
 
-	"github.com/adamdecaf/community-commits/internal/source"
+	"github.com/acaloiaro/neoq"
 )
 
 // TODO(adam):
@@ -22,6 +20,8 @@ import (
 type Worker struct {
 	conf   Config
 	logger *slog.Logger
+
+	queue neoq.Neoq
 }
 
 func NewWorker(logger *slog.Logger, conf Config) (*Worker, error) {
@@ -30,46 +30,23 @@ func NewWorker(logger *slog.Logger, conf Config) (*Worker, error) {
 		logger: logger,
 	}
 
+	err := w.setupNeoq()
+	if err != nil {
+		return nil, fmt.Errorf("setting up neoq: %w", err)
+	}
+
 	return w, nil
 }
 
 func (w *Worker) Sync() error {
 	// For each repository grab the forks and insert each as an item to crawl
 	for _, repo := range w.conf.Tracking.Repositories {
-		// TODO(adam):
-		fmt.Printf("repo: %#v\n", repo)
+		err := w.enqueueRepository(repo)
+		if err != nil {
+			return fmt.Errorf("enqueue %v failed: %w", repo.ID(), err)
+		}
 	}
-
-	// type Repository
-	// 	Source string
-	// 	Owner  string
-	// 	Name   string
-
 	return nil
 }
 
-var (
-	sourceClientLock  sync.Mutex
-	sourceClientCache = make(map[string]source.Client)
-)
-
-func (w *Worker) getSourceClient(name string) source.Client {
-	sourceClientLock.Lock()
-	defer sourceClientLock.Unlock()
-
-	name = strings.ToLower(name)
-
-	cc, exists := sourceClientCache[name]
-	if cc != nil && exists {
-		return cc
-	}
-
-	cc, err := source.ByName(name, w.conf.Sources)
-	if err != nil {
-		w.logger.Error(fmt.Sprintf("creating %s source client: %v", name, err))
-		return nil
-	}
-	sourceClientCache[name] = cc
-
-	return cc
-}
+// TODO(adam): add .Start()

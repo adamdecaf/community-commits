@@ -1,0 +1,11 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_USER: "community_commits"
+      POSTGRES_PASSWORD: "secret"
+      POSTGRES_DATABASE: "community_commits"
