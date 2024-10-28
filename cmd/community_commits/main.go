@@ -30,5 +30,6 @@ func main() {
 	err = env.TrackingWorker.Start(ctx)
 	if err != nil {
 		env.Logger.Info(fmt.Sprintf("shutting down: %v", err))
+		os.Exit(1)
 	}
 }
