@@ -66,7 +66,7 @@ func (g *githubSource) ListNetworkPushEvents(ctx context.Context, repo Repositor
 
 	currentListOptions := &github.ListOptions{}
 	maxListOptions := &github.ListOptions{
-		Page:    25,
+		Page:    5,
 		PerPage: 100,
 	}
 	err := g.listNetworkEvents(ctx, repo, collector, currentListOptions, maxListOptions)
@@ -133,5 +133,5 @@ func (g *githubSource) listNetworkEvents(
 		collector(event)
 	}
 
-	return nil
+	return g.listNetworkEvents(ctx, repo, collector, currentListOptions, maxListOptions)
 }
