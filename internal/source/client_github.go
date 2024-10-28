@@ -64,9 +64,11 @@ func (g *githubSource) ListNetworkPushEvents(ctx context.Context, repo Repositor
 		}
 	}
 
-	currentListOptions := &github.ListOptions{}
+	currentListOptions := &github.ListOptions{
+		Page: -1,
+	}
 	maxListOptions := &github.ListOptions{
-		Page:    3,
+		Page:    5,
 		PerPage: 100,
 	}
 	err := g.listNetworkEvents(ctx, repo, collector, currentListOptions, maxListOptions)
@@ -106,7 +108,7 @@ func (g *githubSource) listNetworkEvents(
 	maxListOptions *github.ListOptions,
 ) error {
 	// Have we reached our max?
-	if currentListOptions.Page > maxListOptions.Page && currentListOptions.PerPage > maxListOptions.PerPage {
+	if currentListOptions.Page >= maxListOptions.Page && currentListOptions.PerPage >= maxListOptions.PerPage {
 		return nil
 	}
 	// Increment
