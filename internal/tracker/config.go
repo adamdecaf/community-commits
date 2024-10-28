@@ -51,9 +51,8 @@ type Config struct {
 }
 
 type TrackingConfig struct {
-	Repositories []Repository
-
-	Queue QueueConfig
+	Repositories   []Repository
+	OutputFilepath string
 }
 
 type Repository struct {

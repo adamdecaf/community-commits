@@ -1,4 +1,5 @@
 Tracking:
+  OutputFilepath: "docs/moov-io/index.html"
   Repositories:
     - source: "github"
       owner: "moov-io"
@@ -123,8 +124,3 @@ Tracking:
     - source: "github"
       owner: "moov-io"
       name: "x12"
-
-  Queue:
-    QueueName: "oss_repos"
-    ConnectionString: "postgres://community_commits:secret@127.0.0.1:5432/community_commits?sslmode=disable"
-    RescanEvery: "24h"

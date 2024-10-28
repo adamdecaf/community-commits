@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/adamdecaf/community-commits/internal/source"
@@ -71,7 +70,7 @@ func (w *Worker) Start(ctx context.Context) error {
 	}
 
 	// relative to the project's root dir
-	fd, err := os.Create(filepath.Join("docs", "networks", "index.html"))
+	fd, err := os.Create(w.conf.Tracking.OutputFilepath)
 	if err != nil {
 		return fmt.Errorf("creating index.html failed")
 	}
