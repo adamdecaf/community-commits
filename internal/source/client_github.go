@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/v62/github"
@@ -37,6 +38,9 @@ func (g *githubSource) GetForks(ctx context.Context, owner, name string) ([]Repo
 	}
 	repos, resp, err := g.client.Repositories.ListForks(ctx, owner, name, opts)
 	if err != nil {
+		if strings.Contains(err.Error(), "404 Not Found") {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("listing forks: %w", err)
 	}
 	if resp != nil && resp.Body != nil {
@@ -67,6 +71,9 @@ func (g *githubSource) ListBranches(ctx context.Context, repo Repository) ([]Bra
 	}
 	branches, resp, err := g.client.Repositories.ListBranches(ctx, repo.Owner, repo.Name, opts)
 	if err != nil {
+		if strings.Contains(err.Error(), "404 Not Found") {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("listing branches: %w", err)
 	}
 	if resp != nil && resp.Body != nil {
@@ -111,6 +118,9 @@ func (g *githubSource) ListCommits(ctx context.Context, repo Repository, branch 
 	}
 	commits, resp, err := g.client.Repositories.ListCommits(ctx, repo.Owner, repo.Name, opts)
 	if err != nil {
+		if strings.Contains(err.Error(), "404 Not Found") {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("listing commits: %w", err)
 	}
 	if resp != nil && resp.Body != nil {

@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/adamdecaf/community-commits/internal/forks"
+
 	"github.com/acaloiaro/neoq"
 )
 
@@ -24,12 +26,16 @@ type Worker struct {
 	logger *slog.Logger
 
 	queue neoq.Neoq
+
+	forkRepository forks.Repository
 }
 
-func NewWorker(logger *slog.Logger, conf Config) (*Worker, error) {
+func NewWorker(logger *slog.Logger, conf Config, forkRepository forks.Repository) (*Worker, error) {
 	w := &Worker{
 		conf:   conf,
 		logger: logger,
+
+		forkRepository: forkRepository,
 	}
 
 	err := w.setupNeoq()

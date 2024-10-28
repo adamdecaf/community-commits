@@ -6,6 +6,7 @@ import (
 	"os"
 
 	communitycommits "github.com/adamdecaf/community-commits"
+	"github.com/adamdecaf/community-commits/internal/forks"
 	"github.com/adamdecaf/community-commits/internal/tracker"
 )
 
@@ -24,8 +25,12 @@ func Setup(configFilepath string) (Environment, error) {
 	}
 	env.Config = *conf
 
+	if env.ForksRepository == nil {
+		env.ForksRepository = forks.NewRepository(nil) // TODO(adam):
+	}
+
 	if env.TrackingWorker == nil {
-		w, err := tracker.NewWorker(env.Logger, env.Config)
+		w, err := tracker.NewWorker(env.Logger, env.Config, env.ForksRepository)
 		if err != nil {
 			return env, fmt.Errorf("setting up tracking worker: %w", err)
 		}
