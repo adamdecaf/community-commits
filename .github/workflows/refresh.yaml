@@ -22,15 +22,15 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Switch to master
-        run: |
-          git fetch origin
-          git checkout master
-
       - name: Refresh Data
         run: make run-example
         env:
           COMMUNITY_COMMITS_GITHUB_API_KEY: ${{ secrets.COMMUNITY_COMMITS_GITHUB_API_KEY }}
+
+      - name: Switch to master
+        run: |
+          git fetch origin
+          git checkout master
 
       - name: Commit changes
         run: |
