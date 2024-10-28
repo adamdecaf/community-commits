@@ -75,10 +75,6 @@ Tracking:
 
     - source: "github"
       owner: "moov-io"
-      name: "goxmldsig"
-
-    - source: "github"
-      owner: "moov-io"
       name: "imagecashletter"
 
     - source: "github"
