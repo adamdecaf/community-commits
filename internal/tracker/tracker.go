@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/adamdecaf/community-commits/internal/source"
 )
@@ -46,6 +47,11 @@ func (w *Worker) Start(ctx context.Context) error {
 		}
 
 		for _, event := range evts {
+			// Skip moov-io commits (often on branches)
+			if strings.HasPrefix(event.RepoSlug, "moov-io/") {
+				continue
+			}
+
 			key := event.CreatedAt.Format("2006-01-02")
 			events[key] = append(events[key], event)
 		}
@@ -56,7 +62,7 @@ func (w *Worker) Start(ctx context.Context) error {
 	for key, commits := range events {
 		pushEvents = append(pushEvents, PushEventsTemplate{
 			Date:    key,
-			Commits: commits,
+			Commits: dedupCommits(commits),
 		})
 	}
 	slices.SortFunc(pushEvents, func(e1, e2 PushEventsTemplate) int {
@@ -82,6 +88,38 @@ func (w *Worker) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func dedupCommits(events []source.PushEvent) []source.PushEvent {
+	byURL := make(map[string]source.PushEvent)
+	for _, commits := range events {
+		for _, commit := range commits.Commits {
+			byURL[commit.CommitURL] = source.PushEvent{
+				RepoSlug:  commits.RepoSlug,
+				Commits:   []source.WebCommit{commit},
+				CreatedAt: commits.CreatedAt,
+			}
+		}
+	}
+
+	var out2 []source.PushEvent
+	for _, event := range byURL {
+		var found bool
+		for idx := range out2 {
+			if out2[idx].RepoSlug == event.RepoSlug {
+				out2[idx].Commits = append(out2[idx].Commits, event.Commits...)
+			}
+		}
+		if !found {
+			out2 = append(out2, event)
+		}
+	}
+
+	slices.SortFunc(out2, func(e1, e2 source.PushEvent) int {
+		return cmp.Compare(e1.RepoSlug, e2.RepoSlug)
+	})
+
+	return out2
 }
 
 func (w *Worker) getLatestNetworkEvents(ctx context.Context, repo Repository) ([]source.PushEvent, error) {
