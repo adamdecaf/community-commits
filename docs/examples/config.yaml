@@ -2,7 +2,128 @@ Tracking:
   Repositories:
     - source: "github"
       owner: "moov-io"
+      name: "1120x"
+
+    - source: "github"
+      owner: "moov-io"
       name: "ach"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "ach-test-harness"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "ach-web-viewer"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "achgateway"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "bai2"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "bankcron"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "base"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "bertlv"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "cadeft"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "card-utils"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "check-imaging"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "cryptfsnn"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "dukpt"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "fed"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "fincen"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "go-ftp"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "go-sftp"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "goxmldsig"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "imagecashletter"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "irs"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "iso20022"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "iso4217"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "iso8583"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "iso8583-connection"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "metro2"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "rtp20022"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "signedxml"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "watchman"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "wire"
+
+    - source: "github"
+      owner: "moov-io"
+      name: "x12"
+
   Queue:
     QueueName: "oss_repos"
     ConnectionString: "postgres://community_commits:secret@127.0.0.1:5432/community_commits?sslmode=disable"

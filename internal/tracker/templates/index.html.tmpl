@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Community Commits</title>
+  </head>
+  <body>
+    <h3>Community Commits</h3>
+
+    <div style="margin-left: 5%; width: 90%;">
+      {{ range $value := .PushEvents }}
+      <h4>{{ $value.Date }}</h4>
+      <ul>
+        {{ range $commit := $value.Commits }}
+        <li><strong>{{ $commit.RepoSlug }}</strong></li>
+
+        <ul>
+          {{ range $cmt := $commit.Commits }}
+          <li><a href="{{ $cmt.CommitURL }}" target="_blank">{{ $cmt.Message }}</a></li>
+          {{ end }}
+        </ul>
+
+        {{ end }}
+      </ul>
+      {{ end }}
+    </div>
+
+  </body>
+</html>

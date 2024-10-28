@@ -3,18 +3,15 @@ module github.com/adamdecaf/community-commits
 go 1.22.3
 
 require (
-	github.com/google/go-github/v62 v62.0.0
-	github.com/moov-io/base v0.53.0
+	github.com/acaloiaro/neoq v0.70.0
+	github.com/google/go-github/v66 v66.0.0
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 )
 
 require (
-	github.com/acaloiaro/neoq v0.70.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-kit/log v0.2.1 // indirect
-	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.17.1 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/guregu/null v4.0.0+incompatible // indirect
@@ -46,6 +43,7 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect

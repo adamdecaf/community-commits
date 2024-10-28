@@ -1,14 +1,15 @@
 package tracker
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log/slog"
-	"time"
+	"os"
+	"path/filepath"
+	"slices"
 
-	"github.com/adamdecaf/community-commits/internal/forks"
-
-	"github.com/acaloiaro/neoq"
+	"github.com/adamdecaf/community-commits/internal/source"
 )
 
 // TODO(adam):
@@ -24,56 +25,77 @@ import (
 type Worker struct {
 	conf   Config
 	logger *slog.Logger
-
-	queue neoq.Neoq
-
-	forkRepository forks.Repository
 }
 
-func NewWorker(logger *slog.Logger, conf Config, forkRepository forks.Repository) (*Worker, error) {
+func NewWorker(logger *slog.Logger, conf Config) (*Worker, error) {
 	w := &Worker{
 		conf:   conf,
 		logger: logger,
-
-		forkRepository: forkRepository,
-	}
-
-	err := w.setupNeoq()
-	if err != nil {
-		return nil, fmt.Errorf("setting up neoq: %w", err)
 	}
 
 	return w, nil
 }
 
-func (w *Worker) Sync() error {
-	// We want to scan repositories on startup
-	nextScan := time.Now().In(time.UTC)
+func (w *Worker) Start(ctx context.Context) error {
+	events := make(map[string][]source.PushEvent)
 
-	// For each repository grab the forks and insert each as an item to crawl
+	// For each repository grab their latest events and format
 	for _, repo := range w.conf.Tracking.Repositories {
-		err := w.enqueueRepository(repo, nextScan)
+		evts, err := w.getLatestNetworkEvents(ctx, repo)
 		if err != nil {
-			return fmt.Errorf("enqueue %v failed: %w", repo.ID(), err)
+			return err
+		}
+
+		for _, event := range evts {
+			key := event.CreatedAt.Format("2006-01-02")
+			events[key] = append(events[key], event)
 		}
 	}
-	return nil
-}
 
-func (w *Worker) Start(ctx context.Context) error {
-	err := w.startProcessingJobs(ctx)
+	// Convert push events to HTML output
+	var pushEvents []PushEventsTemplate
+	for key, commits := range events {
+		pushEvents = append(pushEvents, PushEventsTemplate{
+			Date:    key,
+			Commits: commits,
+		})
+	}
+	slices.SortFunc(pushEvents, func(e1, e2 PushEventsTemplate) int {
+		return -1 * cmp.Compare(e1.Date, e2.Date)
+	})
+
+	for idx := range pushEvents {
+		slices.SortFunc(pushEvents[idx].Commits, func(c1, c2 source.PushEvent) int {
+			return cmp.Compare(c1.RepoSlug, c2.RepoSlug)
+		})
+	}
+
+	// relative to the project's root dir
+	fd, err := os.Create(filepath.Join("docs", "networks", "index.html"))
 	if err != nil {
-		return err
+		return fmt.Errorf("creating index.html failed")
+	}
+	err = IndexTemplate.Execute(fd, IndexTemplateData{
+		PushEvents: pushEvents,
+	})
+	if err != nil {
+		return fmt.Errorf("rendering index.html: %w", err)
 	}
 
 	return nil
 }
 
-func (w *Worker) Stop() error {
-	err := w.stopProcessingJobs()
-	if err != nil {
-		return err
+func (w *Worker) getLatestNetworkEvents(ctx context.Context, repo Repository) ([]source.PushEvent, error) {
+	sourceClient := w.getSourceClient(repo.Source)
+	if sourceClient == nil {
+		return nil, nil
 	}
-
-	return nil
+	pushEvents, err := sourceClient.ListNetworkPushEvents(ctx, source.Repository{
+		Owner: repo.Owner,
+		Name:  repo.Name,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return pushEvents, nil
 }

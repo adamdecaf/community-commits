@@ -1,27 +1,18 @@
 package source
 
-import (
-	"time"
-)
+import "time"
 
 type Repository struct {
 	Owner, Name string // TODO(adam): defaults to Github
 }
 
-type Branch struct {
-	Name string
-
-	LastCommitTimestamp time.Time
-
-	Repository Repository
+type PushEvent struct {
+	RepoSlug  string
+	Commits   []WebCommit
+	CreatedAt time.Time
 }
 
-type Commit struct {
-	Hash       string
-	Repository Repository
-	Branch     Branch
-
-	Author  string
-	Date    time.Time
-	Message string
+type WebCommit struct {
+	CommitURL string
+	Message   string
 }

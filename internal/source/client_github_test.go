@@ -56,6 +56,12 @@ func TestGithub_ListCommits(t *testing.T) {
 
 }
 
+func TestGithub_ListNetworkEvents(t *testing.T) {
+	gh := testGithubClient(t)
+
+	gh.ListNetworkEvents()
+}
+
 func testGithubClient(t *testing.T) *githubSource {
 	t.Helper()
 
