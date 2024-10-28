@@ -103,6 +103,10 @@ Tracking:
 
     - source: "github"
       owner: "moov-io"
+      name: "pinblock"
+
+    - source: "github"
+      owner: "moov-io"
       name: "rtp20022"
 
     - source: "github"
