@@ -3,8 +3,8 @@ module github.com/adamdecaf/community-commits
 go 1.22.3
 
 require (
-	github.com/google/go-github/v66 v66.0.0
-	github.com/google/go-github/v69 v69.2.0
+	github.com/google/go-github/v70 v70.0.0
+	github.com/google/go-github/v70 v70.0.0
 	github.com/spf13/viper v1.20.0
 	github.com/stretchr/testify v1.10.0
 )
