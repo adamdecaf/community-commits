@@ -5,8 +5,8 @@ go 1.22.3
 require (
 	github.com/google/go-github/v66 v66.0.0
 	github.com/google/go-github/v69 v69.2.0
-	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
+	github.com/spf13/viper v1.21.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
