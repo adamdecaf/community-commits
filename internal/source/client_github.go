@@ -1,7 +1,6 @@
 package source
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -28,23 +27,6 @@ func (g *githubSource) ListNetworkPushEvents(ctx context.Context, repo Repositor
 
 	collector := func(event *github.Event) {
 		if strings.EqualFold("PushEvent", event.GetType()) {
-			rawPayload := event.GetRawPayload()
-
-			if bytes.Contains(rawPayload, []byte("renovate[bot]")) || bytes.Contains(rawPayload, []byte("dependabot[bot]")) {
-				return
-			}
-			if bytes.Contains(rawPayload, []byte("snyk.io")) {
-				return
-			}
-			if bytes.Contains(rawPayload, []byte("github@users.noreply.github.com")) {
-				return
-			}
-
-			// TODO(adam): read from config
-			if bytes.Contains(rawPayload, []byte("Adam Shannon")) {
-				return
-			}
-
 			payload, err := event.ParsePayload()
 			if err != nil {
 				return
@@ -54,12 +36,31 @@ func (g *githubSource) ListNetworkPushEvents(ctx context.Context, repo Repositor
 				return
 			}
 
-			if len(pushEvent.Commits) > 0 {
-				pushEvents = append(pushEvents, PushEvent{
-					RepoSlug:  makeRepoSlug(pushEvent.Commits[0]),
-					Commits:   makeWebCommits(pushEvent.Commits),
-					CreatedAt: event.GetCreatedAt().Time,
-				})
+			parts := strings.Split(event.Repo.GetName(), "/")
+			if len(parts) != 2 {
+				fmt.Printf("ERROR: unexpected org/repo name: %v", event.Repo.GetName())
+			}
+
+			owner, name := parts[0], parts[1]
+
+			comparison, _, err := g.client.Repositories.CompareCommits(ctx, owner, name, *pushEvent.Before, *pushEvent.Head, nil)
+			if err != nil {
+				fmt.Printf("CompareCommits error for %s/%s (before=%s, head=%s): %v\n", owner, name, *pushEvent.Before, *pushEvent.Head, err)
+				return
+			}
+
+			if len(comparison.Commits) > 0 {
+				repoSlug := fmt.Sprintf("%s/%s", owner, name)
+				commits := makeWebCommitsFromComparison(comparison.Commits)
+
+				if len(commits) > 0 {
+					evt := PushEvent{
+						RepoSlug:  repoSlug,
+						Commits:   commits,
+						CreatedAt: event.GetCreatedAt().Time,
+					}
+					pushEvents = append(pushEvents, evt)
+				}
 			}
 		}
 	}
@@ -84,17 +85,37 @@ func makeRepoSlug(commit *github.HeadCommit) string {
 	return fmt.Sprintf("%s/%s", parts[2], parts[3])
 }
 
-func makeWebCommits(commits []*github.HeadCommit) []WebCommit {
+var (
+	skippableMessageSlugs = []string{
+		"renovate[bot]",
+		"dependabot[bot]",
+		"snyk.io",
+		"github@users.noreply.github.com",
+		"Adam Shannon",
+	}
+)
+
+func makeWebCommitsFromComparison(commits []*github.RepositoryCommit) []WebCommit {
 	var out []WebCommit
 	for _, commit := range commits {
-		// convert https://api.github.com/repos/andrewjones-bond/ach/commits/f2b925a4f758140544cf1ccecbf4bf113a9123b0
-		// into    https://    github.com/      andrewjones-bond/ach/commits/f2b925a4f758140544cf1ccecbf4bf113a9123b0
+		if commit.Commit.Message == nil {
+			continue
+		}
+
+		message := *commit.Commit.Message
+		for idx := range skippableMessageSlugs {
+			if strings.Contains(message, skippableMessageSlugs[idx]) {
+				continue
+			}
+		}
+
+		// Transform API URL to web URL (same as before)
 		url := strings.TrimPrefix(*commit.URL, "https://api.github.com/repos/")
 		url = fmt.Sprintf("https://github.com/%s", url)
 
 		out = append(out, WebCommit{
 			CommitURL: url,
-			Message:   *commit.Message,
+			Message:   message,
 		})
 	}
 	return out

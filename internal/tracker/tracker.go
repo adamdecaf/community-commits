@@ -131,6 +131,9 @@ func (w *Worker) getLatestNetworkEvents(ctx context.Context, repo Repository) ([
 		Owner: repo.Owner,
 		Name:  repo.Name,
 	})
+
+	fmt.Printf("found %d PushEvents for %s/%s - error: %v\n", len(pushEvents), repo.Owner, repo.Name, err)
+
 	if err != nil {
 		return nil, err
 	}
