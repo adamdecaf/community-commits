@@ -127,15 +127,17 @@ func (w *Worker) getLatestNetworkEvents(ctx context.Context, repo Repository) ([
 	if sourceClient == nil {
 		return nil, nil
 	}
+
 	pushEvents, err := sourceClient.ListNetworkPushEvents(ctx, source.Repository{
 		Owner: repo.Owner,
 		Name:  repo.Name,
 	})
-
-	fmt.Printf("found %d PushEvents for %s/%s - error: %v\n", len(pushEvents), repo.Owner, repo.Name, err)
+	w.logger.Info(fmt.Sprintf("found %d PushEvents for %s/%s", len(pushEvents), repo.Owner, repo.Name))
 
 	if err != nil {
+		w.logger.Error(fmt.Sprintf("problem getting latest network events: %v", err))
 		return nil, err
 	}
+
 	return pushEvents, nil
 }
