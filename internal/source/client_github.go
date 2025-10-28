@@ -113,6 +113,11 @@ func makeWebCommitsFromComparison(commits []*github.RepositoryCommit) []WebCommi
 		url := strings.TrimPrefix(*commit.URL, "https://api.github.com/repos/")
 		url = fmt.Sprintf("https://github.com/%s", url)
 
+		parts := strings.SplitN(message, "\n", 2)
+		if len(parts) > 0 {
+			message = strings.TrimSpace(parts[0])
+		}
+
 		out = append(out, WebCommit{
 			CommitURL: url,
 			Message:   message,
