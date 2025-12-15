@@ -20,7 +20,7 @@ jobs:
           go-version: stable
 
       - name: Check out code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Refresh Data
         run: make run-example
